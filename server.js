@@ -8,7 +8,7 @@ const fs = require('fs');
 const { type } = require('express/lib/response');
 require('dotenv').config();
 const app = express();
-// const port = 5000;
+
 const port = process.env.PORT || 5000;
 const uploadsDir = process.env.FILE_UPLOAD_DIR || 'uploads/';
 
@@ -133,7 +133,6 @@ app.get('/api/people/:id', async (req, res) => {
   
       res.status(200).json(person);  // If found, return the person's data
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: 'Error retrieving person', error: error.message });
     }
   });
@@ -152,7 +151,6 @@ app.put('/api/people/:id', async (req, res) => {
   
       res.status(200).json({ message: 'Person updated successfully', person: updatedPerson });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: 'Error updating person', error: error.message });
     }
   });
@@ -160,7 +158,6 @@ app.put('/api/people/:id', async (req, res) => {
   // API endpoint to delete a person by ID
   app.delete('/api/people/:id', async (req, res) => {
     const { id } = req.params;
-    console.log('Attempting to delete person with ID:', id);  // Log the ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: 'Invalid ID format' });
       }
@@ -173,7 +170,6 @@ app.put('/api/people/:id', async (req, res) => {
   
       res.status(200).json({ message: 'Person deleted successfully', person: deletedPerson });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: 'Error deleting person', error: error.message });
     }
   });
