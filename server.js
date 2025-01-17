@@ -23,7 +23,7 @@ if (!fs.existsSync(uploadsDir)) {
 // OR restrict to specific frontend URL (for production)
 app.use(
   cors({
-    origin: "https://birthday-backend-etz1.onrender.com", // Replace with your frontend's deployed URL
+    origin: "https://birthday-reminder-app-s0yd.onrender.com", // Replace with your frontend's deployed URL
   })
 );
 app.use(express.json());
