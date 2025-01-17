@@ -21,11 +21,16 @@ if (!fs.existsSync(uploadsDir)) {
 // app.use(cors());
 
 // OR restrict to specific frontend URL (for production)
-app.use(
-  cors({
-    origin: "https://birthday-reminder-app-s0yd.onrender.com", // Replace with your frontend's deployed URL
-  })
-);
+// app.use(
+//   cors({
+//     origin: "https://birthday-reminder-app-s0yd.onrender.com", // Replace with your frontend's deployed URL
+//   })
+// );
+app.use(cors({
+  origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
+  methods: "GET,POST,PUT,DELETE", // Allowed methods
+  allowedHeaders: "Content-Type,Authorization", // Allowed headers
+}));
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
