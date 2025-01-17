@@ -17,7 +17,15 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-app.use(cors());
+// Allow all origins (for development/testing)
+// app.use(cors());
+
+// OR restrict to specific frontend URL (for production)
+app.use(
+  cors({
+    origin: "https://birthday-backend-etz1.onrender.com", // Replace with your frontend's deployed URL
+  })
+);
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
