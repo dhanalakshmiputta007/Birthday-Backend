@@ -11,7 +11,6 @@ const app = express();
 
 const port = process.env.PORT || 5000;
 const uploadsDir = process.env.FILE_UPLOAD_DIR || 'uploads/';
-
 // Set up uploads directory
 // const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
