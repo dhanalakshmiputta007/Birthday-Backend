@@ -29,12 +29,10 @@ app.use(
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/people?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.log(err));
 
 // Image Schema (Stores file path and other metadata about the image)
 const imageSchema = new mongoose.Schema({
