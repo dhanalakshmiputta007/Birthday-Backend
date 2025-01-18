@@ -34,7 +34,7 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/people?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.log(err));
@@ -121,12 +121,19 @@ app.post('/api/people', async (req, res) => {
     res.status(400).send({ message: 'Error adding person', error: err.message });
   }
 });
-
+app.get('/', async (req, res) => {
+  try {
+    res.json({status:"Api is working",code:200})
+  } catch (err) {
+    res.status(400).send({ message: 'Error retrieving people', error: err.message });
+  }
+});
 // API endpoint to fetch all people and their image information
 app.get('/api/people', async (req, res) => {
     try {
       // Fetch all persons from the MongoDB collection (no need to populate image as it's a string)
-      const people = await Person.find(); // This retrieves all documents from the Person collection
+      const people = await Person.find(); 
+      console.log(people,"people")// This retrieves all documents from the Person collection
       res.status(200).json(people); // Send the people data as JSON
     } catch (err) {
       res.status(400).send({ message: 'Error retrieving people', error: err.message });
