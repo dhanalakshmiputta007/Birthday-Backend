@@ -18,19 +18,19 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Allow all origins (for development/testing)
-app.use(cors());
+// app.use(cors());
 
 
-// app.use(cors({
-//   origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
-//   methods: "GET,POST,PUT,DELETE", // Allowed methods
-//   allowedHeaders: "Content-Type,Authorization", // Allowed headers
-// }));
+app.use(cors({
+  origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
+  methods: "GET,POST,PUT,DELETE", // Allowed methods
+  allowedHeaders: "Content-Type,Authorization", // Allowed headers
+}));
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
-// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
