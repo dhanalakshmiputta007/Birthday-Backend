@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { type } = require('express/lib/response');
 require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
 const app = express();
 
 const port = process.env.PORT || 5000;
@@ -16,7 +17,11 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
-
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // Allow all origins (for development/testing)
 // app.use(cors());
 
@@ -61,46 +66,87 @@ const personSchema = new mongoose.Schema({
 const Person = mongoose.model('Person', personSchema);
 
 // Set up Multer to handle file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads'); // Save files in the 'uploads' folder
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp as filename to avoid name conflicts
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads'); // Save files in the 'uploads' folder
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp as filename to avoid name conflicts
+//   },
+// });
+const storage = multer.diskStorage({});
 
 const upload = multer({ storage: storage });
 
 // API endpoint to upload an image and store image metadata in MongoDB
+// app.post('/upload', upload.single('image'), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).send('No file uploaded.');
+//     }
+
+//     // Create a new Image document and save it to MongoDB
+//     const newImage = new Image({
+//       path: req.file.path,
+//       filename: req.file.filename,
+//     });
+
+//     await newImage.save(); // Save the image document
+
+//     res.status(200).json({
+//       message: 'File uploaded successfully',
+//       image: newImage,
+//       imagePath: req.file.path,
+//     });
+//   } catch (error) {
+//     res.status(500).send('Error uploading file: ' + error.message);
+//   }
+// });
+// app.post('/upload', upload.single('image'), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).send('No file uploaded.');
+//     }
+
+//     // Upload to Cloudinary
+//     const result = await cloudinary.uploader.upload(req.file.path, {
+//       folder: 'uploads', // Optional: Organize images in a folder
+//     });
+
+//     res.status(200).json({
+//       message: 'File uploaded successfully',
+//       imageUrl: result.secure_url, // Use this URL in your frontend
+//     });
+//   } catch (error) {
+//     res.status(500).send('Error uploading file: ' + error.message);
+//   }
+// });
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send('No file uploaded.');
     }
 
-    // Create a new Image document and save it to MongoDB
-    const newImage = new Image({
-      path: req.file.path,
-      filename: req.file.filename,
+    // Upload file to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'uploads', // Optional: Organize files in a folder
     });
 
-    await newImage.save(); // Save the image document
-
+    // Return the uploaded image URL
     res.status(200).json({
       message: 'File uploaded successfully',
-      image: newImage,
-      imagePath: req.file.path,
+      imageUrl: result.secure_url,
     });
   } catch (error) {
+    // console.error('Error uploading file:', error.message);
     res.status(500).send('Error uploading file: ' + error.message);
   }
 });
-
 // API endpoint to add a person and associate them with an image
 app.post('/api/people', async (req, res) => {
     const { name, age, date, email, address, photo } = req.body;
 
+    // const relativePhotoPath = photo.replace(/^https?:\/\/[^\/]+/, ''); // Keeps only `/uploads/...`
 
   // Create a new Person instance and associate it with the image
   const newPerson = new Person({
@@ -196,7 +242,9 @@ app.put('/api/people/:id', async (req, res) => {
   
 
 // Serve static files from the 'uploads' directory
-app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Start the server
 app.listen(port, () => {
