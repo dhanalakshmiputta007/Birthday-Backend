@@ -10,35 +10,32 @@ require('dotenv').config();
 const app = express();
 
 const port = process.env.PORT || 5000;
-const uploadsDir = process.env.FILE_UPLOAD_DIR || 'uploads/';
+// const uploadsDir = process.env.FILE_UPLOAD_DIR || 'uploads';
 // Set up uploads directory
-// const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
 // Allow all origins (for development/testing)
-// app.use(cors());
+app.use(cors());
 
-// OR restrict to specific frontend URL (for production)
-// app.use(
-//   cors({
-//     origin: "https://birthday-reminder-app-s0yd.onrender.com", // Replace with your frontend's deployed URL
-//   })
-// );
-app.use(cors({
-  origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
-  methods: "GET,POST,PUT,DELETE", // Allowed methods
-  allowedHeaders: "Content-Type,Authorization", // Allowed headers
-}));
+
+// app.use(cors({
+//   origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
+//   methods: "GET,POST,PUT,DELETE", // Allowed methods
+//   allowedHeaders: "Content-Type,Authorization", // Allowed headers
+// }));
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
-// mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(() => console.log('MongoDB connected'))
-//   .catch((err) => console.log(err));
-mongoose.connect(mongoURI);
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
+// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+// mongoose.connect(mongoURI);
 
 
 // Image Schema (Stores file path and other metadata about the image)
@@ -55,7 +52,7 @@ const personSchema = new mongoose.Schema({
     name: { type: String, required: true },
     date: { type: Date, required: true },
     // age: { type: Number, required: true },
-    // email: { type: String, required: true },
+    email: { type: String, required: true },
     // address: { type: String, required: true },
     photo: { type: String, required: true },  // Store the photo path as a string
     createdAt: { type: Date, default: Date.now }, // Timestamp for person entry
@@ -66,7 +63,7 @@ const Person = mongoose.model('Person', personSchema);
 // Set up Multer to handle file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save files in the 'uploads' folder
+    cb(null, 'uploads'); // Save files in the 'uploads' folder
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp as filename to avoid name conflicts
@@ -135,7 +132,6 @@ app.get('/api/people', async (req, res) => {
     try {
       // Fetch all persons from the MongoDB collection (no need to populate image as it's a string)
       const people = await Person.find(); 
-      console.log(people,"people")// This retrieves all documents from the Person collection
       res.status(200).json(people); // Send the people data as JSON
     } catch (err) {
       res.status(400).send({ message: 'Error retrieving people', error: err.message });
@@ -161,10 +157,10 @@ app.get('/api/people/:id', async (req, res) => {
 // API endpoint to update a person based on ID
 app.put('/api/people/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, photo, date } = req.body;
+    const { name, photo, date,email } = req.body;
   
     try {
-      const updatedPerson = await Person.findByIdAndUpdate(id, { name, photo, date }, { new: true });
+      const updatedPerson = await Person.findByIdAndUpdate(id, { name, photo, date,email }, { new: true });
   
       if (!updatedPerson) {
         return res.status(404).json({ message: 'Person not found' });
