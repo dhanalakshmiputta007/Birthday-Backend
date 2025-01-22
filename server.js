@@ -8,6 +8,9 @@ const fs = require('fs');
 const { type } = require('express/lib/response');
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+const cron = require('node-cron');
+const nodemailer = require('nodemailer');
+const twilio = require('twilio');
 const app = express();
 
 const port = process.env.PORT || 5000;
@@ -23,19 +26,70 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 // Allow all origins (for development/testing)
-// app.use(cors());
+// Debug the configuration (only for debugging, do not log secrets in production)
+app.use(cors());
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // Replace with your email
+    pass: process.env.EMAIL_PASS, // Replace with your email password or app-specific password
+  },
+});
+const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+// Function to send email reminder
+const sendEmailReminder = (email, name, date) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: `Reminder: Event Scheduled on ${date}`,
+    text: `Hello ${name},\n\nThis is a reminder for the event scheduled on ${date}.`,
+  };
 
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.log('Error sending email:', err);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+};
 
-app.use(cors({
-  origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
-  methods: "GET,POST,PUT,DELETE", // Allowed methods
-  allowedHeaders: "Content-Type,Authorization", // Allowed headers
-}));
+// Function to send SMS reminder
+const sendSmsReminder = (phoneNumber, name, date) => {
+  twilioClient.messages.create({
+    body: `Hello ${name}, Reminder: You have an event scheduled on ${date}`,
+    from: process.env.TWILIO_PHONE_NUMBER, // Replace with your Twilio phone number
+    to: phoneNumber,
+  }).then((message) => console.log('SMS sent:', message.sid));
+};
+
+// Cron job to send reminders to all people every minute
+cron.schedule('* * * * *', async () => {
+  console.log('Checking for reminders...');
+  try {
+    const allPeople = await Person.find(); // Fetch all people
+
+    for (const person of allPeople) {
+      // Send email and SMS reminders to each person
+      sendEmailReminder(person.email, person.name, person.date);
+      sendSmsReminder(person.phoneNumber, person.name, person.date);
+
+      console.log(`Reminder sent to ${person.name} for ${person.date}`);
+    }
+  } catch (error) {
+    console.log('Error checking reminders:', error.message);
+  }
+});
+// app.use(cors({
+//   origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
+//   methods: "GET,POST,PUT,DELETE", // Allowed methods
+//   allowedHeaders: "Content-Type,Authorization", // Allowed headers
+// }));
 app.use(express.json());
 
 // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
+// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -58,69 +112,17 @@ const personSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     // age: { type: Number, required: true },
     email: { type: String, required: true },
-    // address: { type: String, required: true },
+     phoneNumber: { type: String, required: true },
     photo: { type: String, required: true },  // Store the photo path as a string
     createdAt: { type: Date, default: Date.now }, // Timestamp for person entry
   });
 
 const Person = mongoose.model('Person', personSchema);
 
-// Set up Multer to handle file uploads
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads'); // Save files in the 'uploads' folder
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp as filename to avoid name conflicts
-//   },
-// });
+
 const storage = multer.diskStorage({});
 
 const upload = multer({ storage: storage });
-
-// API endpoint to upload an image and store image metadata in MongoDB
-// app.post('/upload', upload.single('image'), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).send('No file uploaded.');
-//     }
-
-//     // Create a new Image document and save it to MongoDB
-//     const newImage = new Image({
-//       path: req.file.path,
-//       filename: req.file.filename,
-//     });
-
-//     await newImage.save(); // Save the image document
-
-//     res.status(200).json({
-//       message: 'File uploaded successfully',
-//       image: newImage,
-//       imagePath: req.file.path,
-//     });
-//   } catch (error) {
-//     res.status(500).send('Error uploading file: ' + error.message);
-//   }
-// });
-// app.post('/upload', upload.single('image'), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).send('No file uploaded.');
-//     }
-
-//     // Upload to Cloudinary
-//     const result = await cloudinary.uploader.upload(req.file.path, {
-//       folder: 'uploads', // Optional: Organize images in a folder
-//     });
-
-//     res.status(200).json({
-//       message: 'File uploaded successfully',
-//       imageUrl: result.secure_url, // Use this URL in your frontend
-//     });
-//   } catch (error) {
-//     res.status(500).send('Error uploading file: ' + error.message);
-//   }
-// });
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -144,7 +146,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 });
 // API endpoint to add a person and associate them with an image
 app.post('/api/people', async (req, res) => {
-    const { name, age, date, email, address, photo } = req.body;
+    const { name, age, date, email, phoneNumber, photo } = req.body;
 
     // const relativePhotoPath = photo.replace(/^https?:\/\/[^\/]+/, ''); // Keeps only `/uploads/...`
 
@@ -154,7 +156,7 @@ app.post('/api/people', async (req, res) => {
     age,
     date: new Date(date), // Ensure the date is converted to a Date object
     email,
-    address,
+    phoneNumber,
     photo,
   });
 

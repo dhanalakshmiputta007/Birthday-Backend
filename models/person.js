@@ -19,6 +19,9 @@ const personSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  phoneNumber:{ type: Number,
+  required: true},
+
   address: {
     type: String,
     required: false
