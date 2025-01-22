@@ -27,7 +27,7 @@ cloudinary.config({
 });
 // Allow all origins (for development/testing)
 // Debug the configuration (only for debugging, do not log secrets in production)
-app.use(cors());
+// app.use(cors());
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -80,16 +80,16 @@ cron.schedule('* * * * *', async () => {
     console.log('Error checking reminders:', error.message);
   }
 });
-// app.use(cors({
-//   origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
-//   methods: "GET,POST,PUT,DELETE", // Allowed methods
-//   allowedHeaders: "Content-Type,Authorization", // Allowed headers
-// }));
+app.use(cors({
+  origin: "https://birthday-reminder-app-s0yd.onrender.com", // Frontend origin
+  methods: "GET,POST,PUT,DELETE", // Allowed methods
+  allowedHeaders: "Content-Type,Authorization", // Allowed headers
+}));
 app.use(express.json());
 
-// MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
-const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
-// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+// // MongoDB URI (Replace with your own MongoDB URI from MongoDB Atlas or localhost)
+// const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://dhanalakshmiputta007:dhana123@cluster0.eixxf.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
