@@ -56,24 +56,31 @@ const sendEmailReminder = (email, name, date) => {
 
 // Function to send SMS reminder
 const sendSmsReminder = (phoneNumber, name, date) => {
+  console.log("dhana",phoneNumber)
+  if (phoneNumber === process.env.TWILIO_PHONE_NUMBER) {
+    console.error(`Skipping reminder for ${to}: Cannot send message to the same number as "From".`);
+   
+    return;
+  }
   twilioClient.messages.create({
     body: `Hello ${name}, Reminder: You have an event scheduled on ${date}`,
     from: process.env.TWILIO_PHONE_NUMBER, // Replace with your Twilio phone number
     to: phoneNumber,
   }).then((message) => console.log('SMS sent:', message.sid));
 };
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Cron job to send reminders to all people every minute
-cron.schedule('* * * * *', async () => {
-  console.log('Checking for reminders...');
+cron.schedule('0 0 * * *', async () => {
   try {
     const allPeople = await Person.find(); // Fetch all people
 
     for (const person of allPeople) {
       // Send email and SMS reminders to each person
       sendEmailReminder(person.email, person.name, person.date);
+      await delay(1000); // Add a 1-second delay between SMS to avoid rate limits
       sendSmsReminder(person.phoneNumber, person.name, person.date);
-
+      await delay(1000); // Add a 1-second delay between SMS to avoid rate limits
       console.log(`Reminder sent to ${person.name} for ${person.date}`);
     }
   } catch (error) {
@@ -147,8 +154,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 // API endpoint to add a person and associate them with an image
 app.post('/api/people', async (req, res) => {
     const { name, age, date, email, phoneNumber, photo } = req.body;
-
-    // const relativePhotoPath = photo.replace(/^https?:\/\/[^\/]+/, ''); // Keeps only `/uploads/...`
 
   // Create a new Person instance and associate it with the image
   const newPerson = new Person({
